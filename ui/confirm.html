@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="confirm.css" />
+</head>
+<body>
+  <h1>Block element</h1>
+
+  <div id="meta" class="meta">Loading…</div>
+
+  <section class="card">
+    <div class="row">
+      <label><input type="radio" name="scope" value="site" checked /> This website</label>
+      <label><input type="radio" name="scope" value="page" /> This page</label>
+    </div>
+
+    <div class="row">
+      <label><input type="checkbox" id="disablePwd" /> Disable Password Manager</label>
+    </div>
+    <div class="row">
+      <label><input type="checkbox" id="disableAutofill" /> Disable AutoFill</label>
+    </div>
+  </section>
+
+  <div class="actions">
+    <button id="cancel" class="ghost">Cancel</button>
+    <button id="save" class="primary">Save</button>
+  </div>
+
+  <script src="confirm.js" type="module"></script>
+</body>
+</html>

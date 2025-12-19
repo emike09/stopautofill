@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Stop Autofill</title>
+
+  <!-- Your existing CSS file -->
+  <link rel="stylesheet" href="panel.css" />
+</head>
+
+<body>
+  <div class="wrap">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="brand">
+        <div class="logo">SAF</div>
+        <div class="title">
+          <div class="titleLine">
+            <span class="titleText">STOP AUTOFILL</span>
+            <span id="globalState" class="globalState">OFF</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="headerActions">
+        <button class="upgradeBtn" type="button">Upgrade</button>
+        <button class="gearBtn" type="button" aria-label="Settings">⚙</button>
+      </div>
+    </div>
+
+    <!-- Main card -->
+    <div class="card">
+      <div class="row">
+        <div class="label">
+          <div class="labelTitle">This website:</div>
+          <div id="origin" class="labelValue">—</div>
+        </div>
+        <button id="toggleSite" class="dot" type="button" aria-label="Toggle website rule"></button>
+      </div>
+
+      <div class="row">
+        <div class="label">
+          <div class="labelTitle">This page:</div>
+          <div id="page" class="labelValue">—</div>
+        </div>
+        <button id="togglePage" class="dot" type="button" aria-label="Toggle page rule"></button>
+      </div>
+
+      <div class="row">
+        <div class="label">
+          <div class="labelTitle">Disable Password Manager</div>
+        </div>
+        <button id="togglePwd" class="dot" type="button" aria-label="Toggle password manager suppression"></button>
+      </div>
+
+      <div class="row">
+        <div class="label">
+          <div class="labelTitle">Disable AutoFill</div>
+        </div>
+        <button id="toggleAutofill" class="dot" type="button" aria-label="Toggle autofill suppression"></button>
+      </div>
+
+      <!-- Elements Blocked row (hidden unless applicable) -->
+		<div id="elementsRow" class="row hidden">
+		  <div class="label">
+			<div class="labelTitle">Elements Blocked</div>
+		  </div>
+		  <button id="clearElements" class="pillBtn" type="button">
+			Clear Elements?
+		  </button>
+		</div>
+    </div>
+
+    <!-- Stats / Refresh region -->
+    <div class="card">
+      <!-- Refresh card (hidden unless dirty) -->
+      <div id="refreshCard" class="refreshCard hidden">
+        <div class="refreshTitle">Refresh this page</div>
+        <div class="refreshSub">
+          Click the button below for changes to take effect.
+        </div>
+        <button id="refreshPage" class="refreshBtn" type="button">Refresh</button>
+      </div>
+
+      <!-- Stats card (hidden when refreshCard is shown) -->
+      <div id="statsCard" class="statsCard">
+        <div class="statsHeader">NUMBER OF FORMS BLOCKED</div>
+
+        <div class="statsGrid">
+          <div class="statBox">
+            <div class="statLabel">on this page</div>
+            <div id="blockedHere" class="statValue">0</div>
+          </div>
+
+          <div class="statBox">
+            <div class="statLabel">in total</div>
+            <div id="blockedTotal" class="statValue">0</div>
+          </div>
+        </div>
+
+        <div class="buttonRow">
+          <button id="blockElement" class="primaryBtn" type="button">🧱 Block element</button>
+          <button class="secondaryBtn" type="button" disabled>Report issue</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="footerLeft">Enjoying the extension?</div>
+      <div class="footerRight">RATE SAF</div>
+    </div>
+
+  </div>
+
+  <script src="panel.js"></script>
+</body>
+</html>

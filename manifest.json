@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Stop Autofill",
+  "version": "0.1.0",
+  "description": "Opt-in autofill suppression per site/page, with element picker.",
+  "action": {
+    "default_title": "Stop Autofill",
+    "default_popup": "ui/panel.html"
+  },
+  "permissions": ["storage", "contextMenus", "tabs", "scripting", "windows"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "sw.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/apply.js", "content/picker.js"],
+      "css": ["content/picker.css"],
+      "run_at": "document_start"
+    }
+  ]
+}

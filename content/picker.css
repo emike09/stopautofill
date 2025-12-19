@@ -1,0 +1,27 @@
+#saf-picker-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  pointer-events: none;
+}
+
+#saf-picker-box {
+  position: fixed;
+  z-index: 2147483647;
+  border: 2px solid rgba(255, 80, 80, 0.95);
+  background: rgba(255, 80, 80, 0.12);
+  pointer-events: none;
+}
+
+#saf-picker-toast {
+  position: fixed;
+  z-index: 2147483647;
+  left: 16px;
+  bottom: 16px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+  font: 14px/1.2 system-ui, sans-serif;
+  pointer-events: none;
+}
