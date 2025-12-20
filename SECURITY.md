@@ -18,7 +18,7 @@ Users are encouraged to keep the extension up to date to ensure they receive the
 If you believe you have found a security vulnerability in Stop Autofill, please report it responsibly.
 
 ### How to report
-- **Preferred:** Open a private security report via GitHub Security Advisories (if available), or
+- **Preferred:** Open a private security report via GitHub Security Advisories, or
 - **Alternative:** Email the maintainer directly at  
   **contact@stopautofill.com**
 
@@ -29,7 +29,7 @@ Please include:
 - The affected browser(s) and extension version
 
 ### What to expect
-- You should receive an acknowledgment within **72 hours**
+- You should receive an acknowledgment within **72 business hours**
 - If the report is accepted, we will work to assess impact and release a fix as quickly as possible
 - You may be credited for the disclosure if you wish
 
