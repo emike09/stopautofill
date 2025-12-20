@@ -111,7 +111,7 @@ stopautofill/
 - Element selectors may break if sites change their HTML
 
 ## Website
- -[stopautofill.com](https://stopautofill.com)
+ [stopautofill.com](https://stopautofill.com)
 
 ## License
 
