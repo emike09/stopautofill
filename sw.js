@@ -151,7 +151,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "block_element",
-    title: "🛑 Stop Autofill: Block element…",
+    title: "Stop Autofill: Block element…",
     contexts: ["page"]
   });
 });
