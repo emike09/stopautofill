@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Stop Autofill - Settings</title>
+  <link rel="stylesheet" href="settings.css" />
+</head>
+
+<body>
+  <div class="container">
+    
+    <header>
+      <div class="header-content">
+        <img src="../icons/icon128.png" alt="Stop Autofill" class="header-icon" />
+        <div>
+          <h1>Stop Autofill Settings</h1>
+          <p class="subtitle">Configure default behavior and manage rules</p>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      
+      <!-- Default Behavior -->
+      <section class="card">
+        <h2>Default Behavior</h2>
+        <p class="description">Choose what features are enabled by default when you create new rules.</p>
+        
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Disable AutoFill</div>
+            <div class="setting-desc">Prevent address, name, and email autofill</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="defaultAutofill" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Disable Password Manager</div>
+            <div class="setting-desc">Discourage browser password suggestions</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="defaultPassword" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Statistics -->
+      <section class="card">
+        <h2>Statistics</h2>
+        
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="stat-label">Total Forms Blocked</div>
+            <div class="stat-value" id="totalBlocked">0</div>
+          </div>
+        </div>
+
+        <button id="resetStats" class="btn-secondary">Reset Statistics</button>
+      </section>
+
+      <!-- Manage Rules -->
+      <section class="card">
+        <h2>Manage Rules</h2>
+        <p class="description">View and manage all your blocking rules.</p>
+
+        <div class="rules-summary">
+          <div class="rule-count">
+            <span class="count" id="siteRuleCount">0</span>
+            <span class="count-label">Site Rules</span>
+          </div>
+          <div class="rule-count">
+            <span class="count" id="pageRuleCount">0</span>
+            <span class="count-label">Page Rules</span>
+          </div>
+          <div class="rule-count">
+            <span class="count" id="elementRuleCount">0</span>
+            <span class="count-label">Element Rules</span>
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button id="exportRules" class="btn-secondary">Export Rules</button>
+          <button id="clearAllRules" class="btn-danger">Clear All Rules</button>
+        </div>
+      </section>
+
+      <!-- About -->
+      <section class="card">
+        <h2>About</h2>
+        <div class="about-grid">
+          <div class="about-item">
+            <div class="about-label">Version</div>
+            <div class="about-value" id="versionNumber">Loading...</div>
+          </div>
+          <div class="about-item">
+            <div class="about-label">License</div>
+            <div class="about-value">GPL-3.0</div>
+          </div>
+        </div>
+        
+        <p class="about-text">
+          Stop Autofill is an open-source extension that gives you control over browser autofill behavior.
+          Block autofill on entire sites, specific pages, or individual form elements.
+        </p>
+
+        <div class="button-group">
+          <button id="viewDocs" class="btn-secondary">View Documentation</button>
+          <button id="reportIssue" class="btn-secondary">Report Issue</button>
+        </div>
+      </section>
+
+    </main>
+
+    <footer>
+      <p>Stop Autofill &copy; 2024 | <a href="#" id="privacyLink">Privacy Policy</a></p>
+    </footer>
+
+  </div>
+
+  <script src="settings.js"></script>
+</body>
+</html>

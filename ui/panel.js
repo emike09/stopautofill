@@ -4,55 +4,11 @@ let current = {
   url: null,
   origin: null,
   sync: null,
-  activeScope: "site"
+  activeScope: "site",
+  tabId: null
 };
 
 let dirty = false;
-
-/* ---------------- Target tab resolution (popup vs window mode) ---------------- */
-
-const params = new URLSearchParams(location.search);
-const TARGET_TAB_ID = params.has("tabId") ? Number(params.get("tabId")) : null;
-
-async function getTargetTab() {
-  if (Number.isFinite(TARGET_TAB_ID)) {
-    try { return await chrome.tabs.get(TARGET_TAB_ID); } catch { /* ignore */ }
-  }
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  return tab ?? null;
-}
-
-async function getActiveTabUrl() {
-  const tab = await getTargetTab();
-  return tab?.url ?? null;
-}
-
-/* ---------------- Refresh card UI ---------------- */
-
-function setDirty(on) {
-  dirty = !!on;
-  const refreshCard = document.getElementById("refreshCard");
-  const statsCard = document.getElementById("statsCard");
-  if (!refreshCard || !statsCard) return;
-
-  refreshCard.classList.toggle("hidden", !dirty);
-  statsCard.classList.toggle("hidden", dirty);
-}
-
-async function setPendingRefresh(value) {
-  const tab = await getTargetTab();
-  if (!tab?.id) return;
-  await chrome.runtime.sendMessage({ type: "SET_PENDING_REFRESH", tabId: tab.id, value });
-  setDirty(value);
-}
-
-async function loadPendingRefresh() {
-  const tab = await getTargetTab();
-  if (!tab?.id) return setDirty(false);
-
-  const resp = await chrome.runtime.sendMessage({ type: "GET_PENDING_REFRESH", tabId: tab.id });
-  setDirty(!!resp?.value);
-}
 
 /* ---------------- Helpers ---------------- */
 
@@ -61,62 +17,24 @@ function dotSet(button, on) {
   button.classList.toggle("on", !!on);
 }
 
+function setDirty(on) {
+  dirty = !!on;
+  const refreshCard = el("refreshCard");
+  const statsCard = el("statsCard");
+  if (refreshCard && statsCard) {
+    refreshCard.classList.toggle("hidden", !dirty);
+    statsCard.classList.toggle("hidden", dirty);
+  }
+}
+
+async function getTargetTab() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  return tab ?? null;
+}
+
 function computeGlobalOn(data, url, origin) {
   if (!data || !url || !origin) return false;
   return !!(data.rules.page[url]?.enabled || data.rules.site[origin]?.enabled);
-}
-
-function anyScopeEnabled(data, url, origin) {
-  return !!(data?.rules?.page?.[url]?.enabled || data?.rules?.site?.[origin]?.enabled);
-}
-
-function ensureRule(data, scope, url, origin) {
-  if (scope === "page") {
-    data.rules.page[url] ??= {
-      enabled: true,
-      disableAutofill: data.defaults.disableAutofill,
-      disablePasswordManager: data.defaults.disablePasswordManager
-    };
-    return data.rules.page[url];
-  }
-
-  data.rules.site[origin] ??= {
-    enabled: true,
-    disableAutofill: data.defaults.disableAutofill,
-    disablePasswordManager: data.defaults.disablePasswordManager
-  };
-  return data.rules.site[origin];
-}
-
-function enforceRuleHasEffect(scope) {
-  const data = current.sync;
-  if (!data || !current.url || !current.origin) return;
-
-  const rule =
-    scope === "page"
-      ? data.rules.page[current.url]
-      : data.rules.site[current.origin];
-
-  if (!rule) return;
-
-  const hasEffect = !!rule.disableAutofill || !!rule.disablePasswordManager;
-  if (!hasEffect) rule.enabled = false;
-}
-
-function enforceFeaturesOffWhenNoScopes(data, url, origin) {
-  const siteEnabled = !!data?.rules?.site?.[origin]?.enabled;
-  const pageEnabled = !!data?.rules?.page?.[url]?.enabled;
-
-  if (!siteEnabled && !pageEnabled) {
-    if (data.rules.site[origin]) {
-      data.rules.site[origin].disableAutofill = false;
-      data.rules.site[origin].disablePasswordManager = false;
-    }
-    if (data.rules.page[url]) {
-      data.rules.page[url].disableAutofill = false;
-      data.rules.page[url].disablePasswordManager = false;
-    }
-  }
 }
 
 function hasElementsForThisPage(data, origin, url) {
@@ -131,128 +49,164 @@ function hasElementsForThisPage(data, origin, url) {
   );
 }
 
-function enforcePageOnWhenOnlyElements(data, origin, url) {
-  const hasElems = hasElementsForThisPage(data, origin, url);
-  const siteOn = !!data?.rules?.site?.[origin]?.enabled;
-  const pageOn = !!data?.rules?.page?.[url]?.enabled;
-
-  if (hasElems && !siteOn && !pageOn) {
-    data.rules.page[url] ??= {
-      enabled: true,
-      disableAutofill: false,
-      disablePasswordManager: false
-    };
-    data.rules.page[url].enabled = true;
-    data.rules.page[url].disableAutofill = false;
-    data.rules.page[url].disablePasswordManager = false;
+function getActiveRule(data, url, origin) {
+  // Page rule takes precedence if enabled
+  if (data.rules.page[url]?.enabled) {
+    return { scope: "page", rule: data.rules.page[url] };
   }
+  
+  // Then site rule
+  if (data.rules.site[origin]?.enabled) {
+    return { scope: "site", rule: data.rules.site[origin] };
+  }
+  
+  // No active rule
+  return null;
 }
 
-/* ---------------- State load/save ---------------- */
+/* ---------------- State management ---------------- */
 
 async function saveSync() {
   await chrome.runtime.sendMessage({ type: "SET_SYNC", payload: current.sync });
-
-  const tab = await getTargetTab();
-  if (tab?.id) {
-    try { await chrome.tabs.sendMessage(tab.id, { type: "STATE_UPDATED" }); } catch {}
+  
+  if (current.tabId) {
+    try {
+      await chrome.tabs.sendMessage(current.tabId, { type: "STATE_UPDATED" });
+    } catch {}
   }
 }
 
 async function loadState() {
-  const url = await getActiveTabUrl();
-  if (!url) return;
+  try {
+    const tab = await getTargetTab();
+    if (!tab?.url) return;
 
-  const resp = await chrome.runtime.sendMessage({ type: "GET_STATE", url });
-  if (!resp?.ok) return;
+    current.tabId = tab.id;
+    const url = tab.url;
 
-  current.url = resp.url;
-  current.origin = resp.origin;
-  current.sync = resp.data;
+    const resp = await chrome.runtime.sendMessage({ type: "GET_STATE", url });
+    if (!resp?.ok) return;
 
-  // If element blocks exist for this page and no scopes are enabled, light up "This page"
-  enforcePageOnWhenOnlyElements(current.sync, current.origin, current.url);
+    current.url = resp.url;
+    current.origin = resp.origin;
+    current.sync = resp.data;
 
-  // Persist enforcement so it survives reopening panel
-  await chrome.runtime.sendMessage({ type: "SET_SYNC", payload: current.sync });
+    // UI updates
+    el("origin").textContent = current.origin ?? "—";
+    const urlObj = current.url ? new URL(current.url) : null;
+    el("page").textContent = urlObj ? urlObj.pathname : "—";
 
-  const siteRule = current.sync.rules.site[current.origin];
-  const pageRule = current.sync.rules.page[current.url];
+    const siteRule = current.sync.rules.site[current.origin];
+    const pageRule = current.sync.rules.page[current.url];
 
-  el("origin").textContent = current.origin ?? "—";
-  el("page").textContent = (current.url ? new URL(current.url).pathname : "—");
+    const siteOn = !!siteRule?.enabled;
+    const pageOn = !!pageRule?.enabled;
 
-  const siteOn = !!siteRule?.enabled;
-  const pageOn = !!pageRule?.enabled;
+    dotSet(el("toggleSite"), siteOn);
+    dotSet(el("togglePage"), pageOn);
 
-  dotSet(el("toggleSite"), siteOn);
-  dotSet(el("togglePage"), pageOn);
+    // Determine active scope based on precedence
+    const activeRuleInfo = getActiveRule(current.sync, current.url, current.origin);
+    current.activeScope = activeRuleInfo?.scope || "site";
 
-  current.activeScope = siteOn ? "site" : (pageOn ? "page" : "site");
+    const globalOn = computeGlobalOn(current.sync, current.url, current.origin);
+    const hasElems = hasElementsForThisPage(current.sync, current.origin, current.url);
+    const elementOnlyMode = hasElems && !globalOn;
+    
+    const globalStateEl = el("globalState");
+    if (globalStateEl) {
+      if (elementOnlyMode) {
+        // Element blocking is active but no site/page rules
+        globalStateEl.textContent = "ELEMENTS";
+        globalStateEl.style.background = "#cc0202";
+        globalStateEl.style.color = "white";
+        globalStateEl.classList.add("element-only");
+      } else if (globalOn) {
+        // Normal ON state (site or page rule active)
+        globalStateEl.textContent = "ON";
+        globalStateEl.style.background = "#4caf50";
+        globalStateEl.style.color = "white";
+        globalStateEl.classList.remove("element-only");
+      } else {
+        // OFF state
+        globalStateEl.textContent = "OFF";
+        globalStateEl.style.background = "#e0e0e0";
+        globalStateEl.style.color = "#666";
+        globalStateEl.classList.remove("element-only");
+      }
+    }
 
-  const globalOn = computeGlobalOn(current.sync, current.url, current.origin);
-  el("globalState").textContent = globalOn ? "ON" : "OFF";
-  el("globalState").style.color = globalOn ? "#2ecc71" : "#ff3b3b";
+    // Feature toggles show the active rule's settings
+    if (activeRuleInfo) {
+      dotSet(el("toggleAutofill"), !!activeRuleInfo.rule.disableAutofill);
+      dotSet(el("togglePwd"), !!activeRuleInfo.rule.disablePasswordManager);
+    } else {
+      dotSet(el("toggleAutofill"), false);
+      dotSet(el("togglePwd"), false);
+    }
 
-  const activeRule =
-    current.activeScope === "page"
-      ? current.sync.rules.page[current.url]
-      : current.sync.rules.site[current.origin];
+    // Elements row (hasElems calculated above)
+    el("elementsRow")?.classList.toggle("hidden", !hasElems);
 
-  if (!siteOn && !pageOn) {
-    dotSet(el("toggleAutofill"), false);
-    dotSet(el("togglePwd"), false);
-  } else {
-    const disableAutofill = activeRule?.disableAutofill ?? current.sync.defaults.disableAutofill;
-    const disablePwd = activeRule?.disablePasswordManager ?? current.sync.defaults.disablePasswordManager;
+    // Stats
+    el("blockedTotal").textContent = String(current.sync.stats.totalFormsBlocked ?? 0);
 
-    dotSet(el("toggleAutofill"), !!disableAutofill);
-    dotSet(el("togglePwd"), !!disablePwd);
+    // Per-page counter
+    const pageResp = await chrome.runtime.sendMessage({ 
+      type: "GET_PAGE_COUNT", 
+      tabId: current.tabId, 
+      url: current.url 
+    });
+    el("blockedHere").textContent = String(pageResp?.count ?? 0);
+
+    // Check refresh state
+    const refreshResp = await chrome.runtime.sendMessage({ 
+      type: "GET_PENDING_REFRESH", 
+      tabId: current.tabId 
+    });
+    setDirty(!!refreshResp?.value);
+
+  } catch (err) {
+    console.error("Error loading state:", err);
   }
-
-  // Elements Blocked row only if element rules apply to this page
-  const hasElemsHere = hasElementsForThisPage(current.sync, current.origin, current.url);
-  const elementsRow = document.getElementById("elementsRow");
-  if (elementsRow) elementsRow.classList.toggle("hidden", !hasElemsHere);
-
-  // Total counter
-  el("blockedTotal").textContent = String(current.sync.stats.totalFormsBlocked ?? 0);
-
-  // Per-page counter (session per tab)
-  const tab = await getTargetTab();
-  const tabId = tab?.id;
-
-  let here = 0;
-  if (tabId && current.url) {
-    const r = await chrome.runtime.sendMessage({ type: "GET_PAGE_COUNT", tabId, url: current.url });
-    here = Number(r?.count ?? 0);
-  }
-  el("blockedHere").textContent = String(here);
 }
 
-/* ---------------- UI event handlers ---------------- */
+/* ---------------- Event Handlers ---------------- */
 
 el("toggleSite").addEventListener("click", async () => {
   const data = current.sync;
   const origin = current.origin;
   if (!data || !origin) return;
 
-  data.rules.site[origin] ??= {
-    enabled: false,
-    disableAutofill: data.defaults.disableAutofill,
-    disablePasswordManager: data.defaults.disablePasswordManager
-  };
-
-  data.rules.site[origin].enabled = !data.rules.site[origin].enabled;
-
-  if (data.rules.site[origin].enabled) {
-    data.rules.site[origin].disableAutofill = true;
-    data.rules.site[origin].disablePasswordManager = true;
+  // Initialize if doesn't exist
+  if (!data.rules.site[origin]) {
+    data.rules.site[origin] = {
+      enabled: false,
+      disableAutofill: data.defaults.disableAutofill,
+      disablePasswordManager: data.defaults.disablePasswordManager
+    };
   }
 
-  current.activeScope = "site";
-  enforceFeaturesOffWhenNoScopes(data, current.url, current.origin);
-  await setPendingRefresh(true);
+  const rule = data.rules.site[origin];
+  rule.enabled = !rule.enabled;
+
+  if (rule.enabled) {
+    // Enabling site rule: turn on both features
+    rule.disableAutofill = true;
+    rule.disablePasswordManager = true;
+    current.activeScope = "site";
+  } else {
+    // Disabling site rule: also disable page rule if it exists
+    if (data.rules.page[current.url]) {
+      data.rules.page[current.url].enabled = false;
+    }
+  }
+  
+  await chrome.runtime.sendMessage({ 
+    type: "SET_PENDING_REFRESH", 
+    tabId: current.tabId, 
+    value: true 
+  });
 
   await saveSync();
   await loadState();
@@ -263,48 +217,30 @@ el("togglePage").addEventListener("click", async () => {
   const url = current.url;
   if (!data || !url) return;
 
-  data.rules.page[url] ??= {
-    enabled: false,
-    disableAutofill: data.defaults.disableAutofill,
-    disablePasswordManager: data.defaults.disablePasswordManager
-  };
-
-  data.rules.page[url].enabled = !data.rules.page[url].enabled;
-
-  if (data.rules.page[url].enabled) {
-    data.rules.page[url].disableAutofill = true;
-    data.rules.page[url].disablePasswordManager = true;
-  }
-
-  current.activeScope = "page";
-  enforceFeaturesOffWhenNoScopes(data, current.url, current.origin);
-  await setPendingRefresh(true);
-
-  await saveSync();
-  await loadState();
-});
-
-el("togglePwd").addEventListener("click", async () => {
-  const data = current.sync;
-  if (!data || !current.url || !current.origin) return;
-
-  const rule = ensureRule(data, current.activeScope, current.url, current.origin);
-  rule.disablePasswordManager = !rule.disablePasswordManager;
-
-  if (rule.disablePasswordManager && !anyScopeEnabled(data, current.url, current.origin)) {
-    data.rules.page[current.url] ??= {
-      enabled: true,
+  // Initialize if doesn't exist
+  if (!data.rules.page[url]) {
+    data.rules.page[url] = {
+      enabled: false,
       disableAutofill: data.defaults.disableAutofill,
       disablePasswordManager: data.defaults.disablePasswordManager
     };
-    data.rules.page[current.url].enabled = true;
-    data.rules.page[current.url].disablePasswordManager = true;
-    data.rules.page[current.url].disableAutofill = !!rule.disableAutofill;
-    current.activeScope = "page";
   }
 
-  enforceRuleHasEffect(current.activeScope);
-  await setPendingRefresh(true);
+  const rule = data.rules.page[url];
+  rule.enabled = !rule.enabled;
+
+  if (rule.enabled) {
+    // Enabling page rule: turn on both features
+    rule.disableAutofill = true;
+    rule.disablePasswordManager = true;
+    current.activeScope = "page";
+  }
+  
+  await chrome.runtime.sendMessage({ 
+    type: "SET_PENDING_REFRESH", 
+    tabId: current.tabId, 
+    value: true 
+  });
 
   await saveSync();
   await loadState();
@@ -314,82 +250,162 @@ el("toggleAutofill").addEventListener("click", async () => {
   const data = current.sync;
   if (!data || !current.url || !current.origin) return;
 
-  const rule = ensureRule(data, current.activeScope, current.url, current.origin);
-  rule.disableAutofill = !rule.disableAutofill;
-
-  if (rule.disableAutofill && !anyScopeEnabled(data, current.url, current.origin)) {
-    data.rules.page[current.url] ??= {
+  // Get the currently active rule
+  const activeRuleInfo = getActiveRule(data, current.url, current.origin);
+  
+  if (!activeRuleInfo) {
+    // No rule is active - enable page rule with autofill disabled
+    data.rules.page[current.url] = {
       enabled: true,
-      disableAutofill: data.defaults.disableAutofill,
-      disablePasswordManager: data.defaults.disablePasswordManager
+      disableAutofill: true,
+      disablePasswordManager: false
     };
-    data.rules.page[current.url].enabled = true;
-    data.rules.page[current.url].disableAutofill = true;
-    data.rules.page[current.url].disablePasswordManager = !!rule.disablePasswordManager;
     current.activeScope = "page";
+  } else {
+    // Toggle autofill on the active rule
+    const rule = activeRuleInfo.rule;
+    rule.disableAutofill = !rule.disableAutofill;
+    
+    // If both features are now off, disable the rule entirely
+    if (!rule.disableAutofill && !rule.disablePasswordManager) {
+      rule.enabled = false;
+    }
   }
 
-  enforceRuleHasEffect(current.activeScope);
-  await setPendingRefresh(true);
+  await chrome.runtime.sendMessage({ 
+    type: "SET_PENDING_REFRESH", 
+    tabId: current.tabId, 
+    value: true 
+  });
 
   await saveSync();
   await loadState();
 });
 
-el("blockElement").addEventListener("click", async () => {
-  const tab = await getTargetTab();
-  if (!tab?.id) return;
+el("togglePwd").addEventListener("click", async () => {
+  const data = current.sync;
+  if (!data || !current.url || !current.origin) return;
+
+  // Get the currently active rule
+  const activeRuleInfo = getActiveRule(data, current.url, current.origin);
+  
+  if (!activeRuleInfo) {
+    // No rule is active - enable page rule with password manager disabled
+    data.rules.page[current.url] = {
+      enabled: true,
+      disableAutofill: false,
+      disablePasswordManager: true
+    };
+    current.activeScope = "page";
+  } else {
+    // Toggle password manager on the active rule
+    const rule = activeRuleInfo.rule;
+    rule.disablePasswordManager = !rule.disablePasswordManager;
+    
+    // If both features are now off, disable the rule entirely
+    if (!rule.disableAutofill && !rule.disablePasswordManager) {
+      rule.enabled = false;
+    }
+  }
+
+  await chrome.runtime.sendMessage({ 
+    type: "SET_PENDING_REFRESH", 
+    tabId: current.tabId, 
+    value: true 
+  });
+
+  await saveSync();
+  await loadState();
+});
+
+el("blockElement")?.addEventListener("click", async () => {
+  if (!current.tabId) return;
 
   const btn = el("blockElement");
   const oldText = btn.textContent;
 
   btn.classList.add("picking");
-  btn.textContent = "🧱 Select an element…";
+  btn.textContent = "🧱 Select element…";
 
   try {
-    await chrome.tabs.sendMessage(tab.id, { type: "PICKER_START" });
-  } catch {}
+    // Try to send message first
+    await chrome.tabs.sendMessage(current.tabId, { type: "PICKER_START" });
+  } catch (err) {
+    // If content script not injected, inject it now
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: current.tabId },
+        files: ["content/picker.js"]
+      });
+      
+      await chrome.scripting.insertCSS({
+        target: { tabId: current.tabId },
+        files: ["content/picker.css"]
+      });
+      
+      // Wait a bit for script to initialize
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Try again
+      await chrome.tabs.sendMessage(current.tabId, { type: "PICKER_START" });
+    } catch (injectErr) {
+      console.error("Failed to inject and start picker:", injectErr);
+      alert("Could not start element picker. Please refresh the page and try again.");
+      btn.classList.remove("picking");
+      btn.textContent = oldText;
+      return;
+    }
+  }
 
+  // Reset button after 20 seconds
   setTimeout(() => {
     btn.classList.remove("picking");
     btn.textContent = oldText;
   }, 20000);
 });
 
-document.getElementById("refreshPage")?.addEventListener("click", async () => {
-  const tab = await getTargetTab();
-  if (tab?.id) {
-    await chrome.runtime.sendMessage({ type: "CLEAR_PENDING_REFRESH", tabId: tab.id });
-    await chrome.tabs.reload(tab.id);
-  }
+el("refreshPage")?.addEventListener("click", async () => {
+  if (!current.tabId) return;
+
+  await chrome.runtime.sendMessage({ 
+    type: "CLEAR_PENDING_REFRESH", 
+    tabId: current.tabId 
+  });
+
+  try {
+    await chrome.tabs.reload(current.tabId);
+  } catch {}
+
   window.close();
 });
 
-document.getElementById("clearElements")?.addEventListener("click", async () => {
+el("clearElements")?.addEventListener("click", async () => {
   const data = current.sync;
   const origin = current.origin;
   if (!data || !origin) return;
+
+  if (!confirm("Clear all element rules for this site?")) return;
 
   if (data.rules.element && data.rules.element[origin]) {
     delete data.rules.element[origin];
   }
 
-  // If page was only enabled for element-only mode (features false), turn it OFF
-  const siteOn = !!data.rules.site?.[origin]?.enabled;
-  const pageRule = data.rules.page?.[current.url];
+  await chrome.runtime.sendMessage({ 
+    type: "SET_PENDING_REFRESH", 
+    tabId: current.tabId, 
+    value: true 
+  });
 
-  if (!siteOn && pageRule?.enabled && !pageRule.disableAutofill && !pageRule.disablePasswordManager) {
-    pageRule.enabled = false;
-  }
-
-  await setPendingRefresh(true);
   await saveSync();
   await loadState();
 });
 
-/* ---------------- Startup ---------------- */
+el("settingsBtn")?.addEventListener("click", () => {
+  chrome.tabs.create({ url: chrome.runtime.getURL("ui/settings.html") });
+});
+
+/* ---------------- Init ---------------- */
 
 (async () => {
   await loadState();
-  await loadPendingRefresh();
 })();

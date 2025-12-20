@@ -109,22 +109,12 @@ async function getPageCount(tabId, url) {
 
 /* ---------------- Windows ---------------- */
 
-async function openPanelWindow(openerTabId) {
-  const url = chrome.runtime.getURL(`ui/panel.html?mode=window&tabId=${encodeURIComponent(openerTabId)}`);
-  await chrome.windows.create({
-    url,
-    type: "popup",
-    width: 420,
-    height: 640
-  });
-}
-
 async function openConfirmWindow(token) {
   await chrome.windows.create({
     url: chrome.runtime.getURL(`ui/confirm.html?token=${encodeURIComponent(token)}`),
     type: "popup",
-    width: 520,
-    height: 380
+    width: 550,
+    height: 500
   });
 }
 
@@ -160,13 +150,8 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
-    id: "open_panel",
-    title: "Stop Autofill settings…",
-    contexts: ["page"]
-  });
-  chrome.contextMenus.create({
     id: "block_element",
-    title: "Stop Autofill: Block element…",
+    title: "🛑 Stop Autofill: Block element…",
     contexts: ["page"]
   });
 });
@@ -175,14 +160,31 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   const u = safeUrl(tab);
   if (!u || isRestrictedUrl(u)) return;
 
-  if (info.menuItemId === "open_panel") {
-    await openPanelWindow(tab.id);
-  }
-
   if (info.menuItemId === "block_element") {
     try {
       await chrome.tabs.sendMessage(tab.id, { type: "PICKER_START" });
-    } catch {}
+    } catch (err) {
+      // Content script not present, inject it
+      try {
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: ["content/picker.js"]
+        });
+        
+        await chrome.scripting.insertCSS({
+          target: { tabId: tab.id },
+          files: ["content/picker.css"]
+        });
+        
+        // Wait for script to initialize
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Try again
+        await chrome.tabs.sendMessage(tab.id, { type: "PICKER_START" });
+      } catch (injectErr) {
+        console.error("Failed to inject picker:", injectErr);
+      }
+    }
   }
 });
 

@@ -4,8 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Stop Autofill</title>
-
-  <!-- Your existing CSS file -->
   <link rel="stylesheet" href="panel.css" />
 </head>
 
@@ -15,26 +13,25 @@
     <!-- Header -->
     <div class="header">
       <div class="brand">
-        <div class="logo">SAF</div>
+        <img src="../icons/icon128.png" alt="SAF" class="logo-img" />
         <div class="title">
-          <div class="titleLine">
-            <span class="titleText">STOP AUTOFILL</span>
-            <span id="globalState" class="globalState">OFF</span>
-          </div>
+          <span class="titleText">STOP AUTOFILL</span>
+          <span id="globalState" class="globalState">OFF</span>
         </div>
       </div>
-
-      <div class="headerActions">
-        <button class="upgradeBtn" type="button">Upgrade</button>
-        <button class="gearBtn" type="button" aria-label="Settings">⚙</button>
-      </div>
+      <button id="settingsBtn" class="iconBtn" type="button" aria-label="Settings" title="Settings">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M12 1v6m0 6v6m-6-6h6m6 0h6M6.34 6.34l4.24 4.24m5.66 5.66l4.24 4.24M6.34 17.66l4.24-4.24m5.66-5.66l4.24-4.24"></path>
+        </svg>
+      </button>
     </div>
 
     <!-- Main card -->
     <div class="card">
       <div class="row">
         <div class="label">
-          <div class="labelTitle">This website:</div>
+          <div class="labelTitle">This website</div>
           <div id="origin" class="labelValue">—</div>
         </div>
         <button id="toggleSite" class="dot" type="button" aria-label="Toggle website rule"></button>
@@ -42,17 +39,10 @@
 
       <div class="row">
         <div class="label">
-          <div class="labelTitle">This page:</div>
+          <div class="labelTitle">This page</div>
           <div id="page" class="labelValue">—</div>
         </div>
         <button id="togglePage" class="dot" type="button" aria-label="Toggle page rule"></button>
-      </div>
-
-      <div class="row">
-        <div class="label">
-          <div class="labelTitle">Disable Password Manager</div>
-        </div>
-        <button id="togglePwd" class="dot" type="button" aria-label="Toggle password manager suppression"></button>
       </div>
 
       <div class="row">
@@ -62,55 +52,57 @@
         <button id="toggleAutofill" class="dot" type="button" aria-label="Toggle autofill suppression"></button>
       </div>
 
-      <!-- Elements Blocked row (hidden unless applicable) -->
-		<div id="elementsRow" class="row hidden">
-		  <div class="label">
-			<div class="labelTitle">Elements Blocked</div>
-		  </div>
-		  <button id="clearElements" class="pillBtn" type="button">
-			Clear Elements?
-		  </button>
-		</div>
+      <div class="row">
+        <div class="label">
+          <div class="labelTitle">Disable Password Manager</div>
+        </div>
+        <button id="togglePwd" class="dot" type="button" aria-label="Toggle password manager suppression"></button>
+      </div>
+
+      <div id="elementsRow" class="row hidden">
+        <div class="label">
+          <div class="labelTitle">Elements Blocked</div>
+        </div>
+        <button id="clearElements" class="pillBtn" type="button">Clear</button>
+      </div>
     </div>
 
-    <!-- Stats / Refresh region -->
+    <!-- Stats / Refresh -->
     <div class="card">
       <!-- Refresh card (hidden unless dirty) -->
       <div id="refreshCard" class="refreshCard hidden">
-        <div class="refreshTitle">Refresh this page</div>
-        <div class="refreshSub">
-          Click the button below for changes to take effect.
-        </div>
-        <button id="refreshPage" class="refreshBtn" type="button">Refresh</button>
+        <div class="refreshTitle">Refresh Required</div>
+        <div class="refreshSub">Click below for changes to take effect</div>
+        <button id="refreshPage" class="refreshBtn" type="button">Refresh Page</button>
       </div>
 
-      <!-- Stats card (hidden when refreshCard is shown) -->
+      <!-- Stats card -->
       <div id="statsCard" class="statsCard">
-        <div class="statsHeader">NUMBER OF FORMS BLOCKED</div>
+        <div class="statsHeader">FORMS BLOCKED</div>
 
         <div class="statsGrid">
           <div class="statBox">
-            <div class="statLabel">on this page</div>
+            <div class="statLabel">This page</div>
             <div id="blockedHere" class="statValue">0</div>
           </div>
 
           <div class="statBox">
-            <div class="statLabel">in total</div>
+            <div class="statLabel">Total</div>
             <div id="blockedTotal" class="statValue">0</div>
           </div>
         </div>
 
         <div class="buttonRow">
-          <button id="blockElement" class="primaryBtn" type="button">🧱 Block element</button>
-          <button class="secondaryBtn" type="button" disabled>Report issue</button>
+          <button id="blockElement" class="btn primaryBtn" type="button">🧱 Block Element</button>
+          <button class="btn secondaryBtn" type="button" disabled>Report Issue</button>
         </div>
       </div>
     </div>
 
     <!-- Footer -->
     <div class="footer">
-      <div class="footerLeft">Enjoying the extension?</div>
-      <div class="footerRight">RATE SAF</div>
+      <div>Enjoying SAF?</div>
+      <div>★ Rate us</div>
     </div>
 
   </div>

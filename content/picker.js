@@ -24,7 +24,7 @@ function cssEscape(s) {
   return CSS?.escape ? CSS.escape(s) : s.replace(/[^a-zA-Z0-9_-]/g, "\\$&");
 }
 
-// “Good enough” selector builder (we’ll improve later)
+// "Good enough" selector builder (we'll improve later)
 function buildSelector(el) {
   if (!(el instanceof Element)) return null;
 

@@ -3,32 +3,34 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Block Element - Stop Autofill</title>
   <link rel="stylesheet" href="confirm.css" />
 </head>
 <body>
-  <h1>Block element</h1>
+  <div class="wrap">
+    <h1>Block Element</h1>
 
-  <div id="meta" class="meta">Loading…</div>
+    <div id="meta" class="meta">Loading…</div>
 
-  <section class="card">
-    <div class="row">
-      <label><input type="radio" name="scope" value="site" checked /> This website</label>
-      <label><input type="radio" name="scope" value="page" /> This page</label>
+    <section class="card">
+      <div class="row">
+        <label><input type="checkbox" id="disableAutofill" checked /> Disable AutoFill</label>
+      </div>
+      <div class="row">
+        <label><input type="checkbox" id="disablePwd" checked /> Disable Password Manager</label>
+      </div>
+    </section>
+
+    <p class="info">This will block the selected element site-wide on <strong id="originDisplay"></strong></p>
+
+    <p class="warning">⚠️ Warning: Clicking Save &amp; Apply will refresh the page.</p>
+
+    <div class="actions">
+      <button id="cancel" class="btn ghost">Cancel</button>
+      <button id="save" class="btn primary">Save & Apply</button>
     </div>
-
-    <div class="row">
-      <label><input type="checkbox" id="disablePwd" /> Disable Password Manager</label>
-    </div>
-    <div class="row">
-      <label><input type="checkbox" id="disableAutofill" /> Disable AutoFill</label>
-    </div>
-  </section>
-
-  <div class="actions">
-    <button id="cancel" class="ghost">Cancel</button>
-    <button id="save" class="primary">Save</button>
   </div>
 
-  <script src="confirm.js" type="module"></script>
+  <script src="confirm.js"></script>
 </body>
 </html>

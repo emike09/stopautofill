@@ -57,9 +57,8 @@
     try { chrome.runtime.sendMessage({ type: "INCR_PAGE", delta }); } catch {}
   }
 
-  // Optional: Only enable if you REALLY want totals to climb based on page-level application.
-  // Otherwise keep totals incrementing only on Save in confirm.js (element rules), or by your own logic.
-  const INCREMENT_TOTAL_ON_APPLY = false;
+  // Enable total counter to track all forms blocked across all sites over time
+  const INCREMENT_TOTAL_ON_APPLY = true;
   function incrTotal(delta) {
     if (!INCREMENT_TOTAL_ON_APPLY) return;
     try { chrome.runtime.sendMessage({ type: "INCR_TOTAL", delta }); } catch {}
@@ -108,6 +107,21 @@
     // form-level autocomplete off (best-effort)
     if (opts.disableAutofill) {
       form.setAttribute("autocomplete", "off");
+      
+      // Add submit handler to restore original names before form submission
+      if (!form.dataset.safSubmitHandler) {
+        form.dataset.safSubmitHandler = "1";
+        form.addEventListener("submit", (e) => {
+          // Restore original field names right before submit
+          const fields = form.querySelectorAll("input[data-original-name]");
+          fields.forEach(field => {
+            const originalName = field.getAttribute("data-original-name");
+            if (originalName) {
+              field.name = originalName;
+            }
+          });
+        }, { capture: true });
+      }
     }
 
     // Apply to inputs inside this form
@@ -127,7 +141,6 @@
   }
 
   function installReadonlyHack(field) {
-
     if (!field || field.dataset?.safReadonlyHack === "1") return;
 
     // Avoid breaking fields that are already readonly/disabled
@@ -153,5 +166,174 @@
     field.addEventListener("pointerdown", remove, { once: true, capture: true });
   }
 
-  function applyToField(
-::contentReference[oaicite:0]{index=0}
+  function applyToField(field, opts, skipCounter = false) {
+    if (!field || !inVisibleDom(field)) return 0;
+
+    let touched = 0;
+
+    // 1) Disable autofill
+    if (opts.disableAutofill) {
+      field.setAttribute("autocomplete", "off");
+      
+      // Extra aggressive: also try these
+      field.setAttribute("autocorrect", "off");
+      field.setAttribute("autocapitalize", "off");
+      field.setAttribute("spellcheck", "false");
+      
+      // For Chrome which sometimes ignores autocomplete="off"
+      if (field.name) {
+        const randomSuffix = Math.random().toString(36).substring(7);
+        field.setAttribute("data-original-name", field.name);
+        field.name = field.name + "_saf_" + randomSuffix;
+      }
+      
+      touched++;
+    }
+
+    // 2) Discourage password manager  
+    if (opts.disablePasswordManager) {
+      if (isPassword(field)) {
+        field.setAttribute("autocomplete", "new-password");
+        // Also try this for extra prevention
+        field.setAttribute("data-lpignore", "true"); // LastPass
+        field.setAttribute("data-form-type", "other"); // Some managers
+        touched++;
+      } else if (isTextLike(field)) {
+        // Try to discourage username autofill
+        field.setAttribute("autocomplete", "off");
+        field.setAttribute("data-lpignore", "true");
+        touched++;
+      }
+    }
+
+    // 3) Optional readonly hack (enable for element rules)
+    if (opts.disableAutofill && opts.useReadonlyHack) {
+      installReadonlyHack(field);
+      touched++;
+    }
+
+    // Count individual inputs (unless we're applying element rules which already counted)
+    if (touched > 0 && !skipCounter && markInputCounted(field)) {
+      // Already counted via form
+    }
+
+    return touched;
+  }
+
+  // ---- apply rules to page ----
+  function applyRulesToPage() {
+    if (!currentState || !currentState.data) return;
+
+    const sync = currentState.data;
+    const origin = getOrigin();
+    const url = getUrl();
+
+    // Global rule (site/page)
+    const globalRule = effectiveGlobalRule(sync, origin, url);
+    if (globalRule) {
+      const opts = {
+        disableAutofill: !!globalRule.rule.disableAutofill,
+        disablePasswordManager: !!globalRule.rule.disablePasswordManager,
+        useReadonlyHack: false // disabled by default for performance
+      };
+
+      // Apply to all forms
+      const forms = safeQSAll("form");
+      for (const form of forms) {
+        applyToForm(form, opts);
+      }
+
+      // Apply to formless inputs
+      const formlessInputs = safeQSAll("input:not(form input), textarea:not(form textarea)");
+      for (const field of formlessInputs) {
+        applyToField(field, opts);
+      }
+    }
+
+    // Element rules
+    const elemRules = enabledElementRules(sync, origin, url);
+    console.log("[SAF] Checking element rules for", origin, "- Found:", elemRules.length);
+    
+    for (const rule of elemRules) {
+      const ruleKey = `${rule.scope}:${rule.selector}:${rule.url || ""}`;
+      if (matchedElementRuleKeys.has(ruleKey)) continue;
+
+      console.log("[SAF] Applying element rule:", rule.selector);
+      const matches = safeQSAll(rule.selector);
+      console.log("[SAF] Found", matches.length, "matches for", rule.selector);
+      
+      if (matches.length === 0) continue;
+
+      matchedElementRuleKeys.add(ruleKey);
+
+      const opts = {
+        disableAutofill: !!rule.disableAutofill,
+        disablePasswordManager: !!rule.disablePasswordManager,
+        useReadonlyHack: true  // Enable for element rules - user explicitly selected this field
+      };
+
+      for (const el of matches) {
+        console.log("[SAF] Applying to element:", el);
+        if (el instanceof HTMLFormElement) {
+          applyToForm(el, opts);
+        } else {
+          // Skip counter for element rules - already incremented when rule was saved
+          applyToField(el, opts, true);
+        }
+      }
+    }
+  }
+
+  // ---- mutation observer ----
+  function startObserver() {
+    if (observer) return;
+
+    observer = new MutationObserver(() => {
+      applyRulesToPage();
+    });
+
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  function stopObserver() {
+    if (!observer) return;
+    observer.disconnect();
+    observer = null;
+  }
+
+  // ---- initialization ----
+  async function init() {
+    if (!isEligiblePage()) {
+      console.log("[SAF] Not eligible page:", location.protocol);
+      return;
+    }
+
+    console.log("[SAF] Initializing on", location.href);
+    currentState = await getState();
+    if (!currentState) {
+      console.log("[SAF] Failed to get state");
+      return;
+    }
+
+    console.log("[SAF] Got state:", currentState);
+    applyRulesToPage();
+    startObserver();
+  }
+
+  // ---- reload on state update ----
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (msg?.type === "STATE_UPDATED") {
+      init();
+    }
+  });
+
+  // ---- start ----
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
