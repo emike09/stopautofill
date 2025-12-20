@@ -112,7 +112,21 @@ stopautofill/
 
 ## License
 
-GPL-3.0 - See LICENSE file for details
+Stop Autofill is **source-available** under the **PolyForm Shield 1.0.0** license.
+
+That means:
+
+- ✅ You can read and audit the code.
+- ✅ You can use it for personal use and internal business use.
+- ✅ You can report issues and propose improvements.
+
+But:
+
+- ❌ You may not sell this software.
+- ❌ You may not provide it as a paid product or service.
+- ❌ You may not create a competing product (including a fork) and monetize it.
+
+If you need a commercial license or custom terms, contact: <your support email>
 
 ## Contributing
 
