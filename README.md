@@ -126,7 +126,7 @@ But:
 - ❌ You may not provide it as a paid product or service.
 - ❌ You may not create a competing product (including a fork) and monetize it.
 
-If you need a commercial license or custom terms, contact: <your support email>
+If you need a commercial license or custom terms, contact: contact@stopautofill.com
 
 ## Contributing
 
