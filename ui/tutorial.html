@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Stop Autofill - Tutorial</title>
+  <link rel="stylesheet" href="settings.css" />
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <div class="header-content">
+        <img src="../icons/icon128.png" alt="Stop Autofill" class="header-icon" />
+        <div>
+          <h1>Stop Autofill Tutorial</h1>
+          <p class="subtitle">A quick guide to blocking autofill on sites, pages, and specific elements</p>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <!-- Quick Start -->
+      <section class="card">
+        <h2>Quick Start</h2>
+        <p class="description">
+          Stop Autofill works on an <strong>opt-in</strong> basis. You decide where it applies:
+          <strong>this website</strong>, <strong>this page</strong>, or an individual <strong>element</strong>.
+        </p>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">1) Open the extension popup</div>
+            <div class="setting-desc">Click the Stop Autofill icon in your browser toolbar.</div>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">2) Choose scope</div>
+            <div class="setting-desc">Toggle <strong>This website</strong> or <strong>This page</strong> to enable blocking for that scope.</div>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">3) Block a specific element (optional)</div>
+            <div class="setting-desc">Use <strong>Block Element</strong> to pick one form field/container on the page.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Scopes -->
+      <section class="card">
+        <h2>How Scopes Work</h2>
+        <p class="description">
+          Scope determines where your rule applies. Start broad (site/page) or go surgical (element).
+        </p>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">This website</div>
+            <div class="setting-desc">Applies to all pages on the current site (recommended if a site is consistently annoying).</div>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">This page</div>
+            <div class="setting-desc">Applies only to the current page URL (useful for one-off forms).</div>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Element rule</div>
+            <div class="setting-desc">Applies only to a specific selected element (best when only one part of a page is problematic).</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Element Picker -->
+      <section class="card">
+        <h2>Block Element Picker</h2>
+        <p class="description">
+          The element picker lets you click something on a page (a form, container, or input area) and create a rule for it.
+        </p>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Method A: Popup button</div>
+            <div class="setting-desc">
+              Open the extension popup and click <strong>Block Element</strong>, then click the element on the page.
+            </div>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Method B: Right-click menu</div>
+            <div class="setting-desc">
+              Right-click the page and choose <strong>Stop Autofill: Block element…</strong>
+              (you can disable this in Settings).
+            </div>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Tip</div>
+            <div class="setting-desc">
+              If a picker selection is too broad or too narrow, try clicking a parent container or a more specific field.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Defaults -->
+      <section class="card">
+        <h2>Default Behavior Settings</h2>
+        <p class="description">
+          These defaults are used when you create new rules.
+        </p>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Disable AutoFill</div>
+            <div class="setting-desc">Prevents address/name/email autofill suggestions.</div>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Disable Password Manager</div>
+            <div class="setting-desc">Discourages browser password suggestions & prompts.</div>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Disable Right-Click Context</div>
+            <div class="setting-desc">Removes the right-click “Block element…” menu item (popup Block Element still works).</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Manage Rules -->
+      <section class="card">
+        <h2>Manage Rules (Export / Import)</h2>
+        <p class="description">
+          Use Settings to review totals, export a backup, import rules, or wipe everything.
+        </p>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Export Rules</div>
+            <div class="setting-desc">Downloads a JSON file of your current settings/rules.</div>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Import Rules</div>
+            <div class="setting-desc">Loads a JSON export back into Stop Autofill (great for migrating browsers).</div>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Clear All Rules</div>
+            <div class="setting-desc">Deletes every rule and resets blocking coverage (use with care).</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Troubleshooting -->
+      <section class="card">
+        <h2>Troubleshooting</h2>
+        <p class="description">
+          A few quick fixes if something doesn’t behave the way you expect.
+        </p>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Rule changes not applying?</div>
+            <div class="setting-desc">
+              Reload the tab after changing rules. Some sites re-render forms dynamically and may need a refresh.
+            </div>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Right-click menu missing?</div>
+            <div class="setting-desc">
+              Check Settings → <strong>Disable Right-Click Context</strong>. If enabled, the context menu is intentionally hidden.
+            </div>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Element picker feels off?</div>
+            <div class="setting-desc">
+              Try selecting a different container element, or choose the input’s parent wrapper instead of the input itself.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Links -->
+      <section class="card">
+        <h2>More Help</h2>
+        <p class="description">Quick links.</p>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label"><a href="settings.html">Back to Settings</a></div>
+            <div class="setting-desc">Manage defaults, rules, export/import, and statistics.</div>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label"><a href="privacy.html">Privacy Policy</a></div>
+            <div class="setting-desc">What data is stored (locally) and what is not collected.</div>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label"><a href="mailto:contact@stopautofill.com">Email Support</a></div>
+            <div class="setting-desc">contact@stopautofill.com</div>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label"><a href="https://github.com/emike09/stopautofill/issues" target="_blank" rel="noreferrer">GitHub Issues</a></div>
+            <div class="setting-desc">Report bugs or request features.</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Stop Autofill &copy; Michael Capps 2026</p>
+    </footer>
+  </div>
+</body>
+</html>

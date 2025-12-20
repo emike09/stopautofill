@@ -104,6 +104,12 @@ async function loadState() {
 
     dotSet(el("toggleSite"), siteOn);
     dotSet(el("togglePage"), pageOn);
+		if (siteOn) {
+		  dotSet(el("togglePage"), true);
+		  el("togglePage")?.classList.add("locked");
+		} else {
+		  el("togglePage")?.classList.remove("locked");
+		}
 
     // Determine active scope based on precedence
     const activeRuleInfo = getActiveRule(current.sync, current.url, current.origin);
@@ -176,9 +182,10 @@ async function loadState() {
 el("toggleSite").addEventListener("click", async () => {
   const data = current.sync;
   const origin = current.origin;
-  if (!data || !origin) return;
+  const url = current.url;
+  if (!data || !origin || !url) return;
 
-  // Initialize if doesn't exist
+  // Ensure site rule exists
   if (!data.rules.site[origin]) {
     data.rules.site[origin] = {
       enabled: false,
@@ -187,36 +194,59 @@ el("toggleSite").addEventListener("click", async () => {
     };
   }
 
-  const rule = data.rules.site[origin];
-  rule.enabled = !rule.enabled;
-
-  if (rule.enabled) {
-    // Enabling site rule: turn on both features
-    rule.disableAutofill = true;
-    rule.disablePasswordManager = true;
-    current.activeScope = "site";
-  } else {
-    // Disabling site rule: also disable page rule if it exists
-    if (data.rules.page[current.url]) {
-      data.rules.page[current.url].enabled = false;
-    }
+  // Ensure page rule exists (so we can toggle it on when site is enabled)
+  if (!data.rules.page[url]) {
+    data.rules.page[url] = {
+      enabled: false,
+      disableAutofill: data.defaults.disableAutofill,
+      disablePasswordManager: data.defaults.disablePasswordManager
+    };
   }
-  
-  await chrome.runtime.sendMessage({ 
-    type: "SET_PENDING_REFRESH", 
-    tabId: current.tabId, 
-    value: true 
+
+  const siteRule = data.rules.site[origin];
+  const pageRule = data.rules.page[url];
+
+  // Toggle site
+  siteRule.enabled = !siteRule.enabled;
+
+  if (siteRule.enabled) {
+    // Enabling site rule: force both features on
+    siteRule.disableAutofill = true;
+    siteRule.disablePasswordManager = true;
+    current.activeScope = "site";
+
+    // ALSO enable this page (your requested behavior)
+    pageRule.enabled = true;
+    pageRule.disableAutofill = true;
+    pageRule.disablePasswordManager = true;
+  } else {
+    // Disabling site rule: do NOT change pageRule (or disable it if you prefer)
+    // If you want disabling site to also disable page, uncomment:
+    // pageRule.enabled = false;
+  }
+
+  await chrome.runtime.sendMessage({
+    type: "SET_PENDING_REFRESH",
+    tabId: current.tabId,
+    value: true
   });
 
   await saveSync();
   await loadState();
 });
 
+
 el("togglePage").addEventListener("click", async () => {
   const data = current.sync;
   const url = current.url;
   if (!data || !url) return;
-
+const siteRule = data.rules.site[current.origin];
+	if (siteRule?.enabled) {
+	  // Site rule is on, so page can't be turned off (no exceptions supported)
+	  // Optional: show a small message instead of silent return
+	  // alert("This page can't be disabled while 'This website' is enabled.");
+	  return;
+	}
   // Initialize if doesn't exist
   if (!data.rules.page[url]) {
     data.rules.page[url] = {
@@ -229,14 +259,7 @@ el("togglePage").addEventListener("click", async () => {
   const rule = data.rules.page[url];
   rule.enabled = !rule.enabled;
 
-  if (rule.enabled) {
-    // Enabling page rule: turn on both features
-    rule.disableAutofill = true;
-    rule.disablePasswordManager = true;
-    current.activeScope = "page";
-  }
-  
-  await chrome.runtime.sendMessage({ 
+   await chrome.runtime.sendMessage({ 
     type: "SET_PENDING_REFRESH", 
     tabId: current.tabId, 
     value: true 

@@ -9,17 +9,17 @@
 
 <body>
   <div class="container">
-    
     <header>
       <div class="header-content">
         <img src="../icons/icon128.png" alt="Stop Autofill" class="header-icon" />
         <div>
           <h1>Stop Autofill Settings</h1>
           <p class="subtitle">Configure default behavior and manage rules</p>
+		  <p class="subtitle"><a href="#" id="tutorialLink" target="_self">Click here for a quick tutorial</a></p>
         </div>
       </div>
     </header>
-
+<input id="importFile" type="file" accept="application/json,.json" style="display:none" />  
     <main>
       
       <!-- Default Behavior -->
@@ -94,9 +94,11 @@
             <span class="count-label">Element Rules</span>
           </div>
         </div>
-
         <div class="button-group">
           <button id="exportRules" class="btn-secondary">Export Rules</button>
+		  <button id="importRules" class="btn-secondary">Import Rules</button>
+		  <input id="importFile" type="file" accept="application/json,.json" style="display:none" />
+		  
           <button id="clearAllRules" class="btn-danger">Clear All Rules</button>
         </div>
       </section>
@@ -116,7 +118,7 @@
         </div>
         
         <p class="about-text">
-          Stop Autofill is a source-available extension that gives you control over browser autofill behavior.
+          Stop Autofill is source-available extension that gives you control over browser autofill behavior.
           Block autofill on entire sites, specific pages, or individual form elements.
         </p>
 
@@ -129,7 +131,7 @@
     </main>
 
     <footer>
-      <p>Stop Autofill &copy; 2026 | <a href="#" id="privacyLink">Privacy Policy</a></p>
+      <p>Stop Autofill &copy; Michael Capps 2026 | <a href="#" id="privacyLink">Privacy Policy</a></p>
     </footer>
 
   </div>
