@@ -93,8 +93,28 @@
         </div>
 
         <div class="buttonRow">
-          <button id="blockElement" class="btn primaryBtn" type="button">🧱 Block Element</button>
-          <button class="btn secondaryBtn" type="button" disabled>Report Issue</button>
+<div class="buttonRow">
+  <button id="blockElement" class="btn primaryBtn" type="button">🧱 Block Element</button>
+
+  <div class="dropdown">
+    <button id="reportIssueBtn" class="btn secondaryBtn" type="button" aria-haspopup="true" aria-expanded="false">
+      Report Issue
+    </button>
+
+    <div id="reportMenu" class="dropdownMenu hidden" role="menu">
+		<button id="reportEmail" class="menuItem" type="button">
+		  <span class="menuIcon emoji" aria-hidden="true">📧</span>
+		  E-Mail
+		</button>
+
+		<button id="reportGithub" class="menuItem" type="button">
+		  <img src="../icons/github.svg" class="menuIcon ghIcon" alt="" />
+		  GitHub
+		</button>
+    </div>
+  </div>
+</div>
+
         </div>
       </div>
     </div>

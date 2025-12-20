@@ -404,6 +404,71 @@ el("settingsBtn")?.addEventListener("click", () => {
   chrome.tabs.create({ url: chrome.runtime.getURL("ui/settings.html") });
 });
 
+// ---- Report Issue dropdown ----
+(function setupReportIssueMenu() {
+  const btn = document.getElementById("reportIssueBtn");
+  const menu = document.getElementById("reportMenu");
+  const email = document.getElementById("reportEmail");
+  const gh = document.getElementById("reportGithub");
+
+  if (!btn || !menu || !email || !gh) return;
+
+  function openMenu() {
+    menu.classList.remove("hidden");
+    btn.setAttribute("aria-expanded", "true");
+  }
+
+  function closeMenu() {
+    menu.classList.add("hidden");
+    btn.setAttribute("aria-expanded", "false");
+  }
+
+  function toggleMenu() {
+    const isHidden = menu.classList.contains("hidden");
+    if (isHidden) openMenu();
+    else closeMenu();
+  }
+
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleMenu();
+  });
+
+  // Close menu if you click anywhere else inside the popup
+  document.addEventListener("click", () => closeMenu());
+
+  // Email option
+  email.addEventListener("click", async (e) => {
+    e.preventDefault();
+    closeMenu();
+    const url = "mailto:contact@stopautofill.com?subject=" + encodeURIComponent("Stop Autofill - Issue");
+    try {
+      await chrome.tabs.create({ url });
+    } catch {
+      // fallback
+      window.open(url, "_blank");
+    }
+  });
+
+  // GitHub option
+  gh.addEventListener("click", async (e) => {
+    e.preventDefault();
+    closeMenu();
+    const url = "https://github.com/emike09/stopautofill/issues";
+    try {
+      await chrome.tabs.create({ url });
+    } catch {
+      window.open(url, "_blank");
+    }
+  });
+
+  // ESC closes menu
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeMenu();
+  });
+})();
+
 /* ---------------- Init ---------------- */
 
 (async () => {

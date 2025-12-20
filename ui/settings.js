@@ -19,6 +19,7 @@ async function loadSettings() {
     // Default settings
     el("defaultAutofill").checked = !!syncData.defaults.disableAutofill;
     el("defaultPassword").checked = !!syncData.defaults.disablePasswordManager;
+	el("defaultRightClick").checked = !!syncData.defaults.disableRightClick;
     
     // Statistics
     el("totalBlocked").textContent = String(syncData.stats.totalFormsBlocked ?? 0);
@@ -52,6 +53,7 @@ async function saveDefaults() {
   
   syncData.defaults.disableAutofill = el("defaultAutofill").checked;
   syncData.defaults.disablePasswordManager = el("defaultPassword").checked;
+  syncData.defaults.disableRightClick = el("defaultRightClick").checked;
   
   await chrome.runtime.sendMessage({ type: "SET_SYNC", payload: syncData });
 }
@@ -59,6 +61,7 @@ async function saveDefaults() {
 // Event listeners
 el("defaultAutofill").addEventListener("change", saveDefaults);
 el("defaultPassword").addEventListener("change", saveDefaults);
+el("defaultRightClick").addEventListener("change", saveDefaults);
 
 el("resetStats").addEventListener("click", async () => {
   if (!confirm("Are you sure you want to reset all statistics? This cannot be undone.")) return;

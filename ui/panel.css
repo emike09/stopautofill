@@ -188,9 +188,17 @@ html, body {
 }
 
 .buttonRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.buttonRow > * {
+  flex: 1;
+}
+
+#blockElement {
+  flex: 1;
 }
 
 .btn {
@@ -210,6 +218,93 @@ html, body {
 .secondaryBtn {
   background: #e0e0e0;
   color: #666;
+}
+
+
+#reportIssueBtn {
+  width: 100%;          /* make it fill the dropdown column */
+}
+
+.dropdown {
+  flex: 1;              /* <-- this is the missing piece */
+  position: relative;
+  display: flex;        /* not inline-flex */
+}
+
+.dropdownMenu {
+  position: absolute;
+
+  /* anchor to the button, open upward */
+  right: 0;
+  bottom: calc(100% + 10px);  /* open above */
+  top: auto;
+
+  min-width: 180px;
+  background: #1f1f1f;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  z-index: 9999;
+}
+
+.ghIcon {
+  width: 16px;
+  height: 16px;
+  filter: invert(1); 
+}
+
+.dropdownMenu.hidden {
+  display: none;
+}
+
+.menuItem {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  padding: 10px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font: inherit;
+  display: flex;
+  align-items: center;   
+  gap: 10px;             
+}
+
+
+.menuItem:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.menuItem img.ghIcon{
+  width: 16px;
+  height: 16px;
+  display: block;        /* removes baseline weirdness */
+  flex: 0 0 16px;        /* prevents shrink */
+}
+
+.menuIcon{
+  width:16px;
+  height:16px;
+  flex:0 0 16px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  line-height:16px;          /* normalize */
+}
+
+.menuIcon.ghIcon{
+  display:block;
+  width:16px;
+  height:16px;
+}
+
+.menuIcon.emoji{
+  transform: translateY(1px); /* tiny baseline tweak */
 }
 
 .btn:disabled {

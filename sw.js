@@ -2,10 +2,11 @@
 const SYNC_KEY = "saf"; // all sync data under one key to stay within per-item limits
 
 const DEFAULTS = {
-  defaults: {
-    disableAutofill: true,
-    disablePasswordManager: true
-  },
+defaults: {
+  disableAutofill: true,
+  disablePasswordManager: true,
+  disableRightClick: false
+},
   rules: {
     site: {},   // origin -> { disableAutofill, disablePasswordManager, enabled: true }
     page: {},   // url -> { disableAutofill, disablePasswordManager, enabled: true }
@@ -148,12 +149,58 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 
 /* ---------------- Context menu ---------------- */
 
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.contextMenus.create({
-    id: "block_element",
-    title: "Stop Autofill: Block element…",
-    contexts: ["page"]
+const MENU_ID_BLOCK = "block_element";
+
+let isCreatingMenus = false;
+
+async function createContextMenus() {
+  if (isCreatingMenus) return;
+  isCreatingMenus = true;
+
+  // Wrap removeAll in a promise to ensure it's finished before proceeding
+  chrome.contextMenus.removeAll(async () => {
+    // Clear lastError from the removal process
+    void chrome.runtime.lastError;
+
+    try {
+      const data = await getSync();
+      const disable = !!data?.defaults?.disableRightClick;
+
+      if (!disable) {
+        chrome.contextMenus.create({
+          id: MENU_ID_BLOCK,
+          title: "Stop Autofill: Block element…",
+          contexts: ["page"]
+        }, () => {
+          // Check for errors during creation
+          if (chrome.runtime.lastError) {
+            // Silently ignore duplicate ID errors if they still occur
+            if (!chrome.runtime.lastError.message.includes("duplicate id")) {
+              console.warn("Context menu creation error:", chrome.runtime.lastError.message);
+            }
+          }
+        });
+      }
+    } catch (err) {
+      console.error("Error in createContextMenus:", err);
+    } finally {
+      isCreatingMenus = false;
+    }
   });
+}
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName !== "sync") return;
+  if (!changes[SYNC_KEY]) return;
+  createContextMenus();
+});
+
+chrome.runtime.onInstalled.addListener(() => {
+  createContextMenus();
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  createContextMenus();
 });
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
