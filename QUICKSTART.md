@@ -1,23 +1,5 @@
 # Quick Start Guide
 
-## Installation (5 minutes)
-
-1. **Download the extension**
-   ```bash
-   # If you have the files
-   cd stopautofill-fixed
-   ```
-
-2. **Load in Chrome/Edge**
-   - Open `chrome://extensions/` (or `edge://extensions/`)
-   - Enable "Developer mode" (toggle in top-right)
-   - Click "Load unpacked"
-   - Select the `stopautofill-fixed` folder
-
-3. **Verify installation**
-   - Extension icon should appear in toolbar
-   - Right-click any page → should see "Stop Autofill: Block element…"
-
 ## First Use (2 minutes)
 
 ### Block Autofill on a Website
@@ -71,6 +53,12 @@
 
 - **Gray (○)**: Feature is OFF
 - **Green (●)**: Feature is ON
+
+### Settings
+-Find various settings under the panel settings button
+-Reset the extension if needed
+-Toggle off the right click context menu
+-Export Rules
 
 ### How Scopes Work
 
